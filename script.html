@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mental Math Memory Grid</title>
+    <style>
+      body {
+        font-family: "Segoe UI", sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: #1a1a1d;
+        color: white;
+        padding: 20px;
+      }
+      #game-container {
+        text-align: center;
+        width: 100%;
+        max-width: 600px;
+      }
+
+      #grid {
+        display: grid;
+        gap: 10px;
+        margin: 20px auto;
+        background: #2b2b2b;
+        padding: 15px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        justify-content: center;
+      }
+
+      .square {
+        aspect-ratio: 1 / 1;
+        width: 100%;
+        min-width: 40px;
+        max-width: 80px;
+        background-color: #444;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+
+      .is-red {
+        background-color: #eb4d4b;
+        box-shadow: 0 0 10px rgba(235, 77, 75, 0.5);
+      }
+      .is-green {
+        background-color: #6ab04c;
+        box-shadow: 0 0 10px rgba(106, 176, 76, 0.5);
+      }
+
+      .locked {
+        pointer-events: none;
+        opacity: 0.8;
+      }
+      .hidden-mode {
+        pointer-events: none;
+      }
+
+      #message {
+        font-size: 1.8rem;
+        margin-bottom: 15px;
+        font-weight: 700;
+        height: 1.6em;
+      }
+      .prompt-box {
+        padding: 4px 12px;
+        border-radius: 6px;
+        text-transform: uppercase;
+        border: 2px solid white;
+      }
+
+      button {
+        padding: 12px 35px;
+        font-size: 1.2rem;
+        cursor: pointer;
+        background: #4834d4;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: bold;
+      }
+
+      #overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(9, 29, 109, 0.95);
+        display: none;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 100;
+      }
+      .math-display {
+        font-size: 4rem;
+        color: #ffd32a;
+        margin-bottom: 20px;
+      }
+      #answer-input {
+        padding: 1px;
+        font-size: 2rem;
+        width: 150px;
+        text-align: center;
+        border-radius: 8px;
+        border: none;
+        margin-bottom: 15px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="game-container">
+      <h2>Level <span id="level-num">1</span></h2>
+      <div id="message">Press start</div>
+      <div id="grid"></div>
+      <button id="action-btn">Start</button>
+    </div>
+
+    <div id="overlay">
+      <div id="math-prompt" class="math-display"></div>
+      <div id="math-input-section" style="display: none">
+        <p style="font-size: 1.5rem">Insert product</p>
+        <input type="number" id="answer-input" placeholder="?" />
+        <br />
+        <button id="submit-math-btn">Check Answer</button>
+      </div>
+      <button id="ready-btn">Continue</button>
+    </div>
+
+    <script>
+      const gridElement = document.getElementById("grid");
+      const messageElement = document.getElementById("message");
+      const actionBtn = document.getElementById("action-btn");
+      const levelDisplay = document.getElementById("level-num");
+      const overlay = document.getElementById("overlay");
+      const mathPrompt = document.getElementById("math-prompt");
+      const mathInputSection = document.getElementById("math-input-section");
+      const readyBtn = document.getElementById("ready-btn");
+      const submitBtn = document.getElementById("submit-math-btn");
+      const answerInput = document.getElementById("answer-input");
+
+      let level = 1;
+      let targetColor = "";
+      let gridData = [];
+      let isInputPhase = false;
+      let points = 0;
+      let num1, num2, product;
+      const levelSize = [4, 6, 9, 12, 16, 20, 25, 30, 36];
+
+      // --- MATH LOGIC ---
+      function startLevelSequence() {
+        const max = level + 4;
+        num1 = Math.floor(Math.random() * (level < 7 ? level * 15 : 100));
+        num2 = Math.floor(Math.random() * (level < 7 ? level * 15 : 100));
+        product = num1 * num2;
+
+        mathPrompt.innerText = `${num1} × ${num2}`;
+        mathInputSection.style.display = "none";
+        readyBtn.style.display = "block";
+        overlay.style.display = "flex";
+      }
+
+      readyBtn.onclick = () => {
+        overlay.style.display = "none";
+        setupLevel();
+      };
+
+      function promptForMathAnswer() {
+        mathPrompt.innerText = "";
+        mathInputSection.style.display = "block";
+        readyBtn.style.display = "none";
+        overlay.style.display = "flex";
+        answerInput.value = "";
+        answerInput.focus();
+      }
+
+      submitBtn.onclick = () => {
+        const userAns = parseInt(answerInput.value);
+        if (userAns === product) {
+          overlay.style.display = "none";
+          messageElement.innerHTML =
+            "<span style='color:#6ab04c'>Correct! Next Level...</span>";
+          level++;
+          levelDisplay.innerText = level;
+          setTimeout(startLevelSequence, 1000);
+        } else {
+          overlay.style.display = "none";
+          gameOver(`Math fail! ${num1}×${num2} = ${product}`);
+        }
+      };
+
+      // --- GRID LOGIC ---
+      function setupLevel() {
+        actionBtn.style.display = "none";
+        gridData = [];
+        const totalSquares =
+          levelSize[Math.min(level - 1, levelSize.length - 1)];
+        const cols = Math.ceil(Math.sqrt(totalSquares));
+
+        gridElement.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+        gridElement.style.width = `${cols * 90}px`;
+        gridElement.innerHTML = "";
+
+        let colors = [];
+        for (let i = 0; i < totalSquares; i++) {
+          colors.push(i % 2 === 0 ? "red" : "green");
+        }
+        for (let i = colors.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [colors[i], colors[j]] = [colors[j], colors[i]];
+        }
+
+        for (let i = 0; i < totalSquares; i++) {
+          const color = colors[i];
+          gridData.push({ color: color, discovered: false });
+          const sq = document.createElement("div");
+          sq.classList.add("square", "is-" + color); // Add color initially
+          sq.onclick = () => handleSquareClick(i, sq);
+          gridElement.appendChild(sq);
+        }
+
+        messageElement.innerText = "Memorize!";
+        gridElement.classList.add("hidden-mode");
+
+        setTimeout(() => {
+          document
+            .querySelectorAll(".square")
+            .forEach((s) => s.classList.remove("is-red", "is-green"));
+          gridElement.classList.remove("hidden-mode");
+          isInputPhase = true;
+          setRandomTarget();
+        }, 2000);
+      }
+
+      function setRandomTarget() {
+        const remaining = gridData.filter((d) => !d.discovered);
+        if (remaining.length === 0) return;
+        const availableColors = [...new Set(remaining.map((d) => d.color))];
+        targetColor =
+          availableColors[Math.floor(Math.random() * availableColors.length)];
+        messageElement.innerHTML = `Find: <span class="prompt-box text-${targetColor}">${targetColor}</span>`;
+      }
+
+      function handleSquareClick(index, element) {
+        if (!isInputPhase || gridData[index].discovered) return;
+
+        if (gridData[index].color === targetColor) {
+          points += 1;
+          gridData[index].discovered = true;
+          element.classList.add("is-" + targetColor, "locked");
+
+          if (gridData.every((d) => d.discovered)) {
+            isInputPhase = false;
+            setTimeout(promptForMathAnswer, 500);
+          } else {
+            setRandomTarget();
+          }
+        } else {
+          gameOver("Wrong square!");
+        }
+      }
+
+      function gameOver(reason) {
+        isInputPhase = false;
+        messageElement.innerHTML = `<span style="color:#eb4d4b">${reason}<br>Final Score: ${points}</span>`;
+        actionBtn.style.display = "inline-block";
+        actionBtn.innerText = "Start Over";
+      }
+
+      actionBtn.onclick = () => {
+        level = 1;
+        points = 0;
+        levelDisplay.innerText = 1;
+        startLevelSequence();
+      };
+    </script>
+  </body>
+</html>
