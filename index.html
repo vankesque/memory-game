@@ -5,26 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Memory Grid</title>
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet" />
+
+
+  <script>
+    const SUPABASE_URL    = 'https://aiexgcunkszmqafnhodt.supabase.co';
+    const SUPABASE_ANON   = 'sb_publishable_v4EwDhlFXV6_p9ZydQA3yw_FtlzEag7';
+  </script>
+
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #0d0d0f;
-      --surface: #16161a;
-      --surface2: #1e1e24;
-      --border: #2a2a32;
-      --red: #ff4757;
-      --red-glow: rgba(255,71,87,0.3);
-      --green: #2ed573;
-      --green-glow: rgba(46,213,115,0.3);
-      --accent: #7b61ff;
+      --bg:          #0d0d0f;
+      --surface:     #16161a;
+      --surface2:    #1e1e24;
+      --border:      #2a2a32;
+      --red:         #ff4757;
+      --red-glow:    rgba(255,71,87,0.3);
+      --green:       #2ed573;
+      --green-glow:  rgba(46,213,115,0.3);
+      --accent:      #7b61ff;
       --accent-glow: rgba(123,97,255,0.4);
-      --gold: #ffd32a;
-      --silver: #c8d6e5;
-      --bronze: #cd6133;
-      --text: #f0f0f5;
-      --muted: #6b6b80;
-      --danger: #ff4757;
+      --gold:        #ffd32a;
+      --silver:      #c8d6e5;
+      --bronze:      #cd6133;
+      --text:        #f0f0f5;
+      --muted:       #6b6b80;
+      --danger:      #ff4757;
     }
 
     body {
@@ -38,6 +45,7 @@
       padding: 24px 16px 60px;
     }
 
+    /* ── HEADER ─────────────────────────────── */
     header {
       width: 100%;
       max-width: 560px;
@@ -46,7 +54,6 @@
       align-items: center;
       margin-bottom: 24px;
     }
-
     .logo {
       font-size: 1.1rem;
       font-weight: 800;
@@ -54,9 +61,8 @@
       text-transform: uppercase;
       color: var(--accent);
     }
-
     .stats { display: flex; gap: 20px; }
-    .stat { text-align: right; }
+    .stat  { text-align: right; }
     .stat-label {
       font-family: 'Space Mono', monospace;
       font-size: 0.6rem;
@@ -71,7 +77,7 @@
       font-weight: 700;
     }
 
-    /* TABS */
+    /* ── TABS ────────────────────────────────── */
     .tabs {
       display: flex;
       width: 100%;
@@ -98,7 +104,7 @@
     }
     .tab.active { background: var(--accent); color: white; }
 
-    /* GAME PANEL */
+    /* ── GAME PANEL ──────────────────────────── */
     #game-panel {
       width: 100%;
       max-width: 560px;
@@ -108,7 +114,7 @@
       gap: 16px;
     }
 
-    /* LEADERBOARD PANEL */
+    /* ── LEADERBOARD PANEL ───────────────────── */
     #lb-panel {
       display: none;
       width: 100%;
@@ -116,13 +122,12 @@
       flex-direction: column;
       gap: 12px;
     }
-
     .lb-header-row {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
     }
-    .lb-title { font-size: 1.1rem; font-weight: 800; }
+    .lb-title    { font-size: 1.1rem; font-weight: 800; }
     .lb-subtitle {
       font-family: 'Space Mono', monospace;
       font-size: 0.65rem;
@@ -131,7 +136,6 @@
       letter-spacing: 0.1em;
       margin-top: 3px;
     }
-
     .lb-refresh-btn {
       background: transparent;
       border: 1.5px solid var(--border);
@@ -143,8 +147,8 @@
       display: flex; align-items: center; justify-content: center;
       transition: border-color 0.2s, color 0.2s, transform 0.5s;
     }
-    .lb-refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
-    .lb-refresh-btn.spinning { transform: rotate(360deg); transition: transform 0.5s; }
+    .lb-refresh-btn:hover   { border-color: var(--accent); color: var(--accent); }
+    .lb-refresh-btn.spinning { transform: rotate(360deg); }
 
     .lb-table {
       background: var(--surface);
@@ -152,7 +156,6 @@
       border-radius: 14px;
       overflow: hidden;
     }
-
     .lb-col-header {
       display: grid;
       grid-template-columns: 44px 1fr 80px 70px 66px;
@@ -164,7 +167,6 @@
       letter-spacing: 0.12em;
       color: var(--muted);
     }
-
     .lb-row {
       display: grid;
       grid-template-columns: 44px 1fr 80px 70px 66px;
@@ -174,47 +176,26 @@
       transition: background 0.15s;
     }
     .lb-row:last-child { border-bottom: none; }
-    .lb-row:hover { background: rgba(255,255,255,0.03); }
-    .lb-row.is-me { background: rgba(123,97,255,0.09); }
+    .lb-row:hover   { background: rgba(255,255,255,0.03); }
+    .lb-row.is-me   { background: rgba(123,97,255,0.09); }
 
-    .lb-rank {
-      font-family: 'Space Mono', monospace;
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: var(--muted);
-    }
+    .lb-rank { font-family: 'Space Mono', monospace; font-size: 0.85rem; font-weight: 700; color: var(--muted); }
     .lb-rank.gold   { color: var(--gold); }
     .lb-rank.silver { color: var(--silver); }
     .lb-rank.bronze { color: var(--bronze); }
 
     .lb-name {
-      font-weight: 700;
-      font-size: 0.9rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      font-weight: 700; font-size: 0.9rem;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .you-badge {
-      font-family: 'Space Mono', monospace;
-      font-size: 0.55rem;
-      background: var(--accent);
-      color: white;
-      padding: 1px 5px;
-      border-radius: 3px;
-      margin-left: 6px;
-      vertical-align: middle;
-      letter-spacing: 0.04em;
+      font-family: 'Space Mono', monospace; font-size: 0.55rem;
+      background: var(--accent); color: white;
+      padding: 1px 5px; border-radius: 3px; margin-left: 6px;
+      vertical-align: middle; letter-spacing: 0.04em;
     }
-    .lb-score {
-      font-family: 'Space Mono', monospace;
-      font-size: 0.9rem;
-      font-weight: 700;
-    }
-    .lb-level, .lb-date {
-      font-family: 'Space Mono', monospace;
-      font-size: 0.75rem;
-      color: var(--muted);
-    }
+    .lb-score { font-family: 'Space Mono', monospace; font-size: 0.9rem; font-weight: 700; }
+    .lb-level, .lb-date { font-family: 'Space Mono', monospace; font-size: 0.75rem; color: var(--muted); }
 
     .lb-empty, .lb-loading {
       padding: 40px 20px;
@@ -227,26 +208,17 @@
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
     .lb-loading { animation: blink 1.2s infinite; }
 
-    /* MESSAGE */
+    /* ── MESSAGE ─────────────────────────────── */
     #message {
-      font-size: 1.4rem;
-      font-weight: 700;
+      font-size: 1.4rem; font-weight: 700;
       height: 2.2rem;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      display: flex; align-items: center; gap: 10px;
     }
-
     .color-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 3px 14px 3px 8px;
-      border-radius: 4px;
-      font-size: 1rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 3px 14px 3px 8px; border-radius: 4px;
+      font-size: 1rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.1em;
     }
     .color-tag.red   { background: rgba(255,71,87,0.15);  border: 1.5px solid var(--red);   color: var(--red); }
     .color-tag.green { background: rgba(46,213,115,0.12); border: 1.5px solid var(--green); color: var(--green); }
@@ -254,170 +226,105 @@
     .color-tag.red   .color-dot { background: var(--red); }
     .color-tag.green .color-dot { background: var(--green); }
 
-    /* TIMER BAR */
+    /* ── TIMER BAR ───────────────────────────── */
     #timer-bar-wrap {
-      width: 100%;
-      height: 4px;
-      background: var(--border);
-      border-radius: 99px;
-      overflow: hidden;
+      width: 100%; height: 4px;
+      background: var(--border); border-radius: 99px; overflow: hidden;
     }
     #timer-bar {
-      height: 100%;
-      width: 100%;
-      background: var(--accent);
-      border-radius: 99px;
+      height: 100%; width: 100%;
+      background: var(--accent); border-radius: 99px;
       transition: width 0.1s linear, background 0.3s;
     }
     #timer-bar.danger { background: var(--danger); }
 
-    /* GRID */
+    /* ── GRID ────────────────────────────────── */
     #grid {
-      display: grid;
-      gap: 8px;
-      padding: 16px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
+      display: grid; gap: 8px; padding: 16px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
     }
-
     .square {
-      aspect-ratio: 1;
-      width: 100%;
-      min-width: 38px;
-      max-width: 72px;
-      border-radius: 8px;
-      cursor: pointer;
-      background: var(--surface2);
-      border: 1.5px solid var(--border);
+      aspect-ratio: 1; width: 100%; min-width: 38px; max-width: 72px;
+      border-radius: 8px; cursor: pointer;
+      background: var(--surface2); border: 1.5px solid var(--border);
       transition: transform 0.1s, box-shadow 0.15s, background 0.15s;
     }
     .square:hover:not(.locked) {
-      transform: scale(1.06);
-      border-color: var(--accent);
+      transform: scale(1.06); border-color: var(--accent);
       box-shadow: 0 0 0 2px var(--accent-glow);
     }
     .square.is-red   { background: var(--red);   border-color: transparent; box-shadow: 0 0 14px var(--red-glow); }
     .square.is-green { background: var(--green);  border-color: transparent; box-shadow: 0 0 14px var(--green-glow); }
     .square.locked      { pointer-events: none; }
     .square.hidden-cell { pointer-events: none; }
-
     @keyframes wrong-flash {
       0%,100% { background: var(--surface2); }
       25%,75%  { background: var(--red); box-shadow: 0 0 20px var(--red-glow); }
     }
     .square.wrong { animation: wrong-flash 0.4s ease; }
 
-    /* ACTION BUTTON */
+    /* ── ACTION BUTTON ───────────────────────── */
     #action-btn {
       padding: 14px 48px;
-      font-family: 'Syne', sans-serif;
-      font-size: 1rem;
-      font-weight: 800;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      cursor: pointer;
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      box-shadow: 0 4px 20px var(--accent-glow);
+      font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 800;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      cursor: pointer; background: var(--accent); color: white; border: none;
+      border-radius: 8px; box-shadow: 0 4px 20px var(--accent-glow);
       transition: transform 0.1s, box-shadow 0.2s;
     }
-    #action-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px var(--accent-glow); }
+    #action-btn:hover  { transform: translateY(-2px); box-shadow: 0 8px 28px var(--accent-glow); }
     #action-btn:active { transform: translateY(0); }
 
-    /* OVERLAY */
+    /* ── OVERLAY ─────────────────────────────── */
     #overlay {
-      position: fixed;
-      inset: 0;
+      position: fixed; inset: 0;
       background: rgba(13,13,15,0.97);
-      display: none;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 200;
-      gap: 20px;
+      display: none; flex-direction: column;
+      justify-content: center; align-items: center;
+      z-index: 200; gap: 20px;
     }
-
     .overlay-label {
-      font-family: 'Space Mono', monospace;
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.18em;
-      color: var(--muted);
-      min-height: 1em;
+      font-family: 'Space Mono', monospace; font-size: 0.7rem;
+      text-transform: uppercase; letter-spacing: 0.18em;
+      color: var(--muted); min-height: 1em;
     }
-
     #math-prompt {
-      font-family: 'Space Mono', monospace;
-      font-size: 3.8rem;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      text-align: center;
-      min-height: 1em;
+      font-family: 'Space Mono', monospace; font-size: 3.8rem;
+      font-weight: 700; letter-spacing: 0.04em;
+      text-align: center; min-height: 1em;
     }
-
     .overlay-timer-wrap { width: 220px; margin-top: -8px; }
     #timer-bar-overlay {
-      height: 3px;
-      background: var(--accent);
-      border-radius: 99px;
-      transition: width 0.1s linear, background 0.3s;
-      width: 100%;
+      height: 3px; background: var(--accent);
+      border-radius: 99px; transition: width 0.1s linear, background 0.3s; width: 100%;
     }
-
-    #answer-form {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-    }
-
+    #answer-form { display: none; flex-direction: column; align-items: center; gap: 16px; }
     #answer-input {
-      background: var(--surface);
-      color: var(--text);
+      background: var(--surface); color: var(--text);
       border: 2px solid var(--border);
-      font-family: 'Space Mono', monospace;
-      font-size: 2rem;
-      width: 180px;
-      text-align: center;
-      border-radius: 10px;
-      padding: 10px;
-      outline: none;
+      font-family: 'Space Mono', monospace; font-size: 2rem;
+      width: 180px; text-align: center; border-radius: 10px;
+      padding: 10px; outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
     }
     #answer-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
 
-    /* NAME FORM */
+    /* ── NAME FORM ───────────────────────────── */
     #name-form {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-      width: 300px;
+      display: none; flex-direction: column;
+      align-items: center; gap: 16px; width: 300px;
     }
-
     .name-form-title { font-size: 1.5rem; font-weight: 800; }
     .name-score-display {
-      font-family: 'Space Mono', monospace;
-      font-size: 0.9rem;
-      color: var(--muted);
+      font-family: 'Space Mono', monospace; font-size: 0.9rem; color: var(--muted);
     }
     .name-score-display span { color: var(--accent); font-weight: 700; }
-
     #name-input {
-      background: var(--surface);
-      color: var(--text);
+      background: var(--surface); color: var(--text);
       border: 2px solid var(--border);
-      font-family: 'Syne', sans-serif;
-      font-size: 1.2rem;
-      font-weight: 700;
-      width: 100%;
-      text-align: center;
-      border-radius: 10px;
-      padding: 12px;
-      outline: none;
+      font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 700;
+      width: 100%; text-align: center; border-radius: 10px;
+      padding: 12px; outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
     }
     #name-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
@@ -426,33 +333,20 @@
 
     .btn-primary {
       padding: 12px 32px;
-      font-family: 'Syne', sans-serif;
-      font-size: 0.9rem;
-      font-weight: 800;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      cursor: pointer;
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      box-shadow: 0 4px 16px var(--accent-glow);
+      font-family: 'Syne', sans-serif; font-size: 0.9rem; font-weight: 800;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      cursor: pointer; background: var(--accent); color: white; border: none;
+      border-radius: 8px; box-shadow: 0 4px 16px var(--accent-glow);
       transition: transform 0.1s;
     }
     .btn-primary:hover { transform: translateY(-1px); }
 
     .btn-secondary {
       padding: 12px 24px;
-      font-family: 'Syne', sans-serif;
-      font-size: 0.9rem;
-      font-weight: 800;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      cursor: pointer;
-      background: transparent;
-      color: var(--muted);
-      border: 1.5px solid var(--border);
-      border-radius: 8px;
+      font-family: 'Syne', sans-serif; font-size: 0.9rem; font-weight: 800;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      cursor: pointer; background: transparent; color: var(--muted);
+      border: 1.5px solid var(--border); border-radius: 8px;
       transition: border-color 0.2s, color 0.2s;
     }
     .btn-secondary:hover { border-color: var(--text); color: var(--text); }
@@ -460,30 +354,37 @@
     .feedback-correct { color: var(--green); }
     .feedback-wrong   { color: var(--red); }
 
-    /* TOAST */
+    /* ── TOAST ───────────────────────────────── */
     #toast {
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
+      position: fixed; bottom: 24px; left: 50%;
       transform: translateX(-50%) translateY(90px);
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 20px;
-      font-family: 'Space Mono', monospace;
-      font-size: 0.75rem;
-      color: var(--text);
-      letter-spacing: 0.06em;
-      z-index: 400;
-      transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 20px;
+      font-family: 'Space Mono', monospace; font-size: 0.75rem;
+      color: var(--text); letter-spacing: 0.06em;
+      z-index: 400; transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
       white-space: nowrap;
     }
-    #toast.show { transform: translateX(-50%) translateY(0); }
+    #toast.show    { transform: translateX(-50%) translateY(0); }
     #toast.success { border-color: var(--green); color: var(--green); }
     #toast.error   { border-color: var(--red);   color: var(--red); }
+
+    /* ── CONFIG WARNING ──────────────────────── */
+    #config-warning {
+      display: none;
+      position: fixed; top: 0; left: 0; right: 0;
+      background: #ff4757; color: white;
+      font-family: 'Space Mono', monospace; font-size: 0.75rem;
+      text-align: center; padding: 8px 16px;
+      z-index: 500; letter-spacing: 0.06em;
+    }
   </style>
 </head>
 <body>
+
+<div id="config-warning">
+  ⚠ Supabase not configured — leaderboard is disabled. Open index.html and set SUPABASE_URL + SUPABASE_ANON.
+</div>
 
 <header>
   <div class="logo">Memory Grid</div>
@@ -519,16 +420,16 @@
   <div class="lb-header-row">
     <div>
       <div class="lb-title">Global Leaderboard</div>
-      <div class="lb-subtitle">Shared · all players · top 100</div>
+      <div class="lb-subtitle">Powered by Supabase · top 100</div>
     </div>
-    <button class="lb-refresh-btn" id="lb-refresh-btn" onclick="loadLeaderboard()">↻</button>
+    <button class="lb-refresh-btn" id="lb-refresh-btn" onclick="loadLeaderboard()" title="Refresh">↻</button>
   </div>
   <div class="lb-table" id="lb-table">
     <div class="lb-loading">Loading scores...</div>
   </div>
 </div>
 
-<!-- OVERLAY -->
+<!-- OVERLAY (math + name entry) -->
 <div id="overlay">
   <div class="overlay-label" id="overlay-label"></div>
   <div id="math-prompt"></div>
@@ -536,7 +437,6 @@
     <div id="timer-bar-overlay"></div>
   </div>
 
-  <!-- math answer -->
   <div id="answer-form">
     <input type="number" id="answer-input" placeholder="?" autocomplete="off" />
     <div class="btn-row">
@@ -544,14 +444,13 @@
     </div>
   </div>
 
-  <!-- ready button (memorise phase) -->
   <button class="btn-secondary" id="continue-btn" style="display:none">I'm Ready →</button>
 
-  <!-- name entry (game over) -->
   <div id="name-form">
     <div class="name-form-title">Game Over</div>
     <div class="name-score-display" id="final-score-display"></div>
-    <input type="text" id="name-input" placeholder="Your name" maxlength="20" autocomplete="off" spellcheck="false" />
+    <input type="text" id="name-input" placeholder="Your name" maxlength="20"
+           autocomplete="off" spellcheck="false" />
     <div class="btn-row">
       <button class="btn-primary" id="save-score-btn">Save to Leaderboard</button>
       <button class="btn-secondary" id="skip-save-btn">Skip</button>
@@ -562,62 +461,99 @@
 <div id="toast"></div>
 
 <script>
-// ═══════════════════════════════════════════
-//   DATABASE  (window.storage — shared, persistent)
-//   Schema: key = "lb-entries"
-//   Value:  JSON array of entry objects
-//   Entry:  { id, name, score, level, ts }
-// ═══════════════════════════════════════════
-const DB_KEY  = 'lb-entries';
-const DB_SHARED = true;
-const MAX_ROWS  = 100;
+// ═══════════════════════════════════════════════════════════════
+//  DATABASE LAYER — Supabase REST API
+//
+//  Table: public.scores
+//  Columns: id (uuid), name (text), score (int),
+//           level (int), created_at (timestamptz)
+//
+//  Run supabase-setup.sql first in your Supabase SQL editor.
+// ═══════════════════════════════════════════════════════════════
 
+const DB_CONFIGURED = !(
+  SUPABASE_URL.includes('YOUR_PROJECT_ID') ||
+  SUPABASE_ANON.includes('YOUR_ANON')
+);
+
+if (!DB_CONFIGURED) {
+  document.getElementById('config-warning').style.display = 'block';
+}
+
+// Base headers for every Supabase request
+function sbHeaders(extra = {}) {
+  return {
+    'Content-Type': 'application/json',
+    'apikey': SUPABASE_ANON,
+    'Authorization': `Bearer ${SUPABASE_ANON}`,
+    ...extra
+  };
+}
+
+// READ — fetch top 100 scores ordered by score desc
 async function dbLoad() {
+  if (!DB_CONFIGURED) return [];
   try {
-    const r = await window.storage.get(DB_KEY, DB_SHARED);
-    return r ? JSON.parse(r.value) : [];
-  } catch { return []; }
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/scores?select=id,name,score,level,created_at&order=score.desc,level.desc,created_at.asc&limit=100`,
+      { headers: sbHeaders({ 'Range': '0-99' }) }
+    );
+    if (!res.ok) throw new Error(await res.text());
+    return await res.json();  // array of row objects
+  } catch (err) {
+    console.error('dbLoad error:', err);
+    return [];
+  }
 }
 
-async function dbSave(rows) {
-  rows.sort((a, b) => b.score - a.score || b.level - a.level);
-  if (rows.length > MAX_ROWS) rows = rows.slice(0, MAX_ROWS);
-  try {
-    await window.storage.set(DB_KEY, JSON.stringify(rows), DB_SHARED);
-    return true;
-  } catch { return false; }
-}
-
+// WRITE — insert a single score row
 async function dbInsert({ name, score, level }) {
-  const rows = await dbLoad();
-  rows.push({
-    id: `${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
-    name: (name || 'Anonymous').trim().slice(0, 20),
-    score, level,
-    ts: Date.now()
-  });
-  return dbSave(rows);
+  if (!DB_CONFIGURED) return false;
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/scores`,
+      {
+        method: 'POST',
+        headers: sbHeaders({ 'Prefer': 'return=minimal' }),
+        body: JSON.stringify({
+          name: (name || 'Anonymous').trim().slice(0, 20),
+          score,
+          level
+        })
+      }
+    );
+    // 201 Created = success
+    return res.status === 201;
+  } catch (err) {
+    console.error('dbInsert error:', err);
+    return false;
+  }
 }
 
-// ═══════════════════════════════════════════
-//   TABS
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+//  TABS
+// ═══════════════════════════════════════════════════════════════
 function switchTab(tab) {
   document.getElementById('tab-game').classList.toggle('active', tab === 'game');
-  document.getElementById('tab-lb').classList.toggle('active', tab === 'lb');
+  document.getElementById('tab-lb').classList.toggle('active',   tab === 'lb');
   document.getElementById('game-panel').style.display = tab === 'game' ? 'flex' : 'none';
   document.getElementById('lb-panel').style.display   = tab === 'lb'   ? 'flex' : 'none';
   if (tab === 'lb') loadLeaderboard();
 }
 
-// ═══════════════════════════════════════════
-//   LEADERBOARD RENDER
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+//  LEADERBOARD RENDER
+// ═══════════════════════════════════════════════════════════════
 let myName = null;
 
 async function loadLeaderboard() {
   const table = document.getElementById('lb-table');
   const btn   = document.getElementById('lb-refresh-btn');
+
+  if (!DB_CONFIGURED) {
+    table.innerHTML = '<div class="lb-empty">Supabase not configured.<br>Set your URL and anon key in index.html.</div>';
+    return;
+  }
 
   table.innerHTML = '<div class="lb-loading">Loading...</div>';
   btn.classList.add('spinning');
@@ -631,17 +567,13 @@ async function loadLeaderboard() {
   }
 
   const rankCls  = i => ['gold','silver','bronze'][i] ?? '';
-  const rankIcon = i => ['🥇','🥈','🥉'][i] ?? `#${i+1}`;
-  const fmtDate  = ts => new Date(ts).toLocaleDateString('en-GB', { day:'2-digit', month:'short' });
+  const rankIcon = i => ['🥇','🥈','🥉'][i] ?? `#${i + 1}`;
+  const fmtDate  = iso => new Date(iso).toLocaleDateString('en-GB', { day:'2-digit', month:'short' });
   const esc      = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
   let html = `
     <div class="lb-col-header">
-      <div></div>
-      <div>Player</div>
-      <div>Score</div>
-      <div>Level</div>
-      <div>Date</div>
+      <div></div><div>Player</div><div>Score</div><div>Level</div><div>Date</div>
     </div>`;
 
   rows.forEach((r, i) => {
@@ -652,48 +584,48 @@ async function loadLeaderboard() {
         <div class="lb-name">${esc(r.name)}${isMe ? '<span class="you-badge">YOU</span>' : ''}</div>
         <div class="lb-score">${r.score}</div>
         <div class="lb-level">Lvl ${r.level}</div>
-        <div class="lb-date">${fmtDate(r.ts)}</div>
+        <div class="lb-date">${fmtDate(r.created_at)}</div>
       </div>`;
   });
 
   table.innerHTML = html;
 }
 
-// ═══════════════════════════════════════════
-//   TOAST
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════════════════
 let toastTimer;
 function showToast(msg, type = '') {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.className = 'show ' + type;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.className = '', 3000);
+  toastTimer = setTimeout(() => t.className = '', 3200);
 }
 
-// ═══════════════════════════════════════════
-//   GAME
-// ═══════════════════════════════════════════
-const gridEl        = document.getElementById('grid');
-const messageEl     = document.getElementById('message');
-const actionBtn     = document.getElementById('action-btn');
-const levelDisplay  = document.getElementById('level-num');
-const scoreDisplay  = document.getElementById('score-num');
-const timerBarWrap  = document.getElementById('timer-bar-wrap');
-const timerBar      = document.getElementById('timer-bar');
-const overlay       = document.getElementById('overlay');
-const overlayLabel  = document.getElementById('overlay-label');
-const mathPrompt    = document.getElementById('math-prompt');
-const answerForm    = document.getElementById('answer-form');
-const answerInput   = document.getElementById('answer-input');
-const submitBtn     = document.getElementById('submit-btn');
-const continueBtn   = document.getElementById('continue-btn');
-const timerBarOv    = document.getElementById('timer-bar-overlay');
-const nameForm      = document.getElementById('name-form');
-const nameInput     = document.getElementById('name-input');
-const saveScoreBtn  = document.getElementById('save-score-btn');
-const skipSaveBtn   = document.getElementById('skip-save-btn');
-const finalScoreEl  = document.getElementById('final-score-display');
+// ═══════════════════════════════════════════════════════════════
+//  GAME
+// ═══════════════════════════════════════════════════════════════
+const gridEl       = document.getElementById('grid');
+const messageEl    = document.getElementById('message');
+const actionBtn    = document.getElementById('action-btn');
+const levelDisplay = document.getElementById('level-num');
+const scoreDisplay = document.getElementById('score-num');
+const timerBarWrap = document.getElementById('timer-bar-wrap');
+const timerBar     = document.getElementById('timer-bar');
+const overlay      = document.getElementById('overlay');
+const overlayLabel = document.getElementById('overlay-label');
+const mathPrompt   = document.getElementById('math-prompt');
+const answerForm   = document.getElementById('answer-form');
+const answerInput  = document.getElementById('answer-input');
+const submitBtn    = document.getElementById('submit-btn');
+const continueBtn  = document.getElementById('continue-btn');
+const timerBarOv   = document.getElementById('timer-bar-overlay');
+const nameForm     = document.getElementById('name-form');
+const nameInput    = document.getElementById('name-input');
+const saveScoreBtn = document.getElementById('save-score-btn');
+const skipSaveBtn  = document.getElementById('skip-save-btn');
+const finalScoreEl = document.getElementById('final-score-display');
 
 let level = 1, points = 0;
 let targetColor = '', gridData = [];
@@ -702,14 +634,13 @@ let num1, num2, product;
 let gridTimerIv = null, ovTimerIv = null;
 
 const LEVEL_SIZES = [4, 6, 9, 12, 16, 20, 25, 30, 36];
-function gridTime(lvl) { return Math.max(10, 30 - (lvl - 1) * 1.5); }
+const gridTime = lvl => Math.max(10, 30 - (lvl - 1) * 1.5);
 
-// — overlay timer —
+// ── timers ──────────────────────────────────────────────────────
 function startOvTimer(sec, onDone) {
   clearInterval(ovTimerIv);
   let elapsed = 0;
-  timerBarOv.style.width = '100%';
-  timerBarOv.style.background = 'var(--accent)';
+  timerBarOv.style.cssText = 'width:100%;background:var(--accent)';
   ovTimerIv = setInterval(() => {
     elapsed += 0.1;
     const pct = Math.max(0, 1 - elapsed / sec);
@@ -719,7 +650,6 @@ function startOvTimer(sec, onDone) {
   }, 100);
 }
 
-// — grid timer —
 function startGridTimer(sec) {
   clearInterval(gridTimerIv);
   timerBarWrap.style.display = 'block';
@@ -741,16 +671,15 @@ function stopGridTimer() {
   timerBar.classList.remove('danger');
 }
 
-// — show/hide overlay sections —
+// ── overlay modes ────────────────────────────────────────────────
 function setOverlayMode(mode) {
-  // modes: 'memorise' | 'answer' | 'gameover'
-  answerForm.style.display    = mode === 'answer'   ? 'flex' : 'none';
-  continueBtn.style.display   = mode === 'memorise' ? 'block': 'none';
-  nameForm.style.display      = mode === 'gameover' ? 'flex' : 'none';
-  overlay.style.display       = 'flex';
+  answerForm.style.display  = mode === 'answer'   ? 'flex'  : 'none';
+  continueBtn.style.display = mode === 'memorise' ? 'block' : 'none';
+  nameForm.style.display    = mode === 'gameover' ? 'flex'  : 'none';
+  overlay.style.display     = 'flex';
 }
 
-// — level: show multiplication —
+// ── level start ──────────────────────────────────────────────────
 function startLevelSequence() {
   const cap = level < 7 ? level * 15 : 100;
   num1 = Math.floor(Math.random() * cap) + 1;
@@ -769,20 +698,20 @@ continueBtn.onclick = () => {
   setupLevel();
 };
 
-// — build grid —
+// ── build grid ───────────────────────────────────────────────────
 function setupLevel() {
   actionBtn.style.display = 'none';
   gridData = [];
   const total = LEVEL_SIZES[Math.min(level - 1, LEVEL_SIZES.length - 1)];
   const cols  = Math.ceil(Math.sqrt(total));
-  const cell  = Math.min(72, Math.floor((Math.min(window.innerWidth - 80, 560) - 32 - (cols-1)*8) / cols));
+  const cell  = Math.min(72, Math.floor((Math.min(window.innerWidth - 80, 560) - 32 - (cols - 1) * 8) / cols));
 
   gridEl.style.gridTemplateColumns = `repeat(${cols}, ${cell}px)`;
   gridEl.innerHTML = '';
 
-  let colors = Array.from({length: total}, (_, i) => i%2===0 ? 'red' : 'green');
-  for (let i = colors.length-1; i > 0; i--) {
-    const j = Math.floor(Math.random()*(i+1));
+  let colors = Array.from({ length: total }, (_, i) => i % 2 === 0 ? 'red' : 'green');
+  for (let i = colors.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
     [colors[i], colors[j]] = [colors[j], colors[i]];
   }
 
@@ -798,7 +727,7 @@ function setupLevel() {
   gridEl.querySelectorAll('.square').forEach(s => s.classList.add('hidden-cell'));
 
   setTimeout(() => {
-    gridEl.querySelectorAll('.square').forEach(s => s.classList.remove('is-red','is-green','hidden-cell'));
+    gridEl.querySelectorAll('.square').forEach(s => s.classList.remove('is-red', 'is-green', 'hidden-cell'));
     isInputPhase = true;
     setTarget();
     startGridTimer(gridTime(level));
@@ -838,7 +767,7 @@ function handleClick(index, el) {
   }
 }
 
-// — math answer phase —
+// ── math answer phase ────────────────────────────────────────────
 function promptMath() {
   overlayLabel.textContent = 'what was the product?';
   mathPrompt.textContent   = `${num1} × ${num2} = ?`;
@@ -856,8 +785,7 @@ answerInput.addEventListener('keypress', e => { if (e.key === 'Enter') submitBtn
 
 submitBtn.onclick = () => {
   clearInterval(ovTimerIv);
-  const val = parseInt(answerInput.value);
-  if (val === product) {
+  if (parseInt(answerInput.value) === product) {
     overlay.style.display = 'none';
     points += 3;
     scoreDisplay.textContent = points;
@@ -871,7 +799,7 @@ submitBtn.onclick = () => {
   }
 };
 
-// — game over + name entry —
+// ── game over ────────────────────────────────────────────────────
 function triggerGameOver(reason) {
   isInputPhase = false;
   stopGridTimer();
@@ -885,6 +813,11 @@ function triggerGameOver(reason) {
     mathPrompt.textContent   = '';
     nameInput.value = myName || '';
     setOverlayMode('gameover');
+
+    // hide save button if DB not configured
+    saveScoreBtn.style.display = DB_CONFIGURED ? 'block' : 'none';
+    if (!DB_CONFIGURED) showToast('Supabase not configured — score not saved', 'error');
+
     setTimeout(() => nameInput.focus(), 120);
   } else {
     showPlayAgain();
@@ -898,10 +831,10 @@ saveScoreBtn.onclick = async () => {
   showPlayAgain();
   showToast('Saving…');
   const ok = await dbInsert({ name, score: points, level });
-  showToast(ok ? `✓ Saved as "${name}"` : '✕ Save failed — try again', ok ? 'success' : 'error');
+  showToast(ok ? `✓ Saved as "${name}"` : '✕ Save failed — check console', ok ? 'success' : 'error');
 };
 
-skipSaveBtn.onclick = () => { overlay.style.display = 'none'; showPlayAgain(); };
+skipSaveBtn.onclick  = () => { overlay.style.display = 'none'; showPlayAgain(); };
 nameInput.addEventListener('keypress', e => { if (e.key === 'Enter') saveScoreBtn.click(); });
 
 function showPlayAgain() {
