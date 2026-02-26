@@ -1,332 +1,923 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mental Math Memory Grid</title>
-    <style>
-      body {
-        font-family: "Segoe UI", sans-serif;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        background: #1a1a1d;
-        color: white;
-        padding: 20px;
-      }
-      #game-container {
-        text-align: center;
-        width: 100%;
-        max-width: 600px;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Memory Grid</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-      #grid {
-        display: grid;
-        gap: 10px;
-        margin: 20px auto;
-        background: #2b2b2b;
-        padding: 15px;
-        border-radius: 15px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        justify-content: center;
-      }
+    :root {
+      --bg: #0d0d0f;
+      --surface: #16161a;
+      --surface2: #1e1e24;
+      --border: #2a2a32;
+      --red: #ff4757;
+      --red-glow: rgba(255,71,87,0.3);
+      --green: #2ed573;
+      --green-glow: rgba(46,213,115,0.3);
+      --accent: #7b61ff;
+      --accent-glow: rgba(123,97,255,0.4);
+      --gold: #ffd32a;
+      --silver: #c8d6e5;
+      --bronze: #cd6133;
+      --text: #f0f0f5;
+      --muted: #6b6b80;
+      --danger: #ff4757;
+    }
 
-      .square {
-        aspect-ratio: 1 / 1;
-        width: 100%;
-        min-width: 40px;
-        max-width: 80px;
-        background-color: #444;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.15s ease;
-      }
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 60px;
+    }
 
-      .is-red {
-        background-color: #eb4d4b;
-        box-shadow: 0 0 10px rgba(235, 77, 75, 0.5);
-      }
-      .is-green {
-        background-color: #6ab04c;
-        box-shadow: 0 0 10px rgba(106, 176, 76, 0.5);
-      }
+    header {
+      width: 100%;
+      max-width: 560px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
 
-      .locked {
-        pointer-events: none;
-        opacity: 0.8;
-      }
-      .hidden-mode {
-        pointer-events: none;
-      }
+    .logo {
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
 
-      #message {
-        font-size: 1.8rem;
-        margin-bottom: 15px;
-        font-weight: 700;
-        height: 1.6em;
-      }
-      .prompt-box {
-        padding: 4px 12px;
-        border-radius: 6px;
-        text-transform: uppercase;
-        border: 2px solid white;
-      }
+    .stats { display: flex; gap: 20px; }
+    .stat { text-align: right; }
+    .stat-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      display: block;
+    }
+    .stat-value {
+      font-family: 'Space Mono', monospace;
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
 
-      button {
-        padding: 12px 35px;
-        font-size: 1.2rem;
-        cursor: pointer;
-        background: #000000;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        font-weight: bold;
-      }
+    /* TABS */
+    .tabs {
+      display: flex;
+      width: 100%;
+      max-width: 560px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .tab {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      background: var(--surface);
+      color: var(--muted);
+      border: none;
+      transition: background 0.2s, color 0.2s;
+    }
+    .tab.active { background: var(--accent); color: white; }
 
-      #overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: #2b2b2b;
-        display: none;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        z-index: 100;
-      }
-      .math-display {
-        font-size: 4rem;
-        color: #ffffff;
-        margin-bottom: 20px;
-      }
-      #answer-input {
-        padding: 1px;
-        font-size: 2rem;
-        width: 150px;
-        text-align: center;
-        border-radius: 8px;
-        border: none;
-        margin-bottom: 15px;
-      }
-      @keyframes pulse {
-        0% {
-          transform: scale(1);
-          opacity: 1;
-        }
-        50% {
-          transform: scale(1.03);
-          opacity: 0.8;
-        }
-        100% {
-          transform: scale(1);
-          opacity: 1;
-        }
-      }
+    /* GAME PANEL */
+    #game-panel {
+      width: 100%;
+      max-width: 560px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
 
-      #math-prompt {
-        animation: pulse 3s infinite ease-in-out;
-        text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
-      }
+    /* LEADERBOARD PANEL */
+    #lb-panel {
+      display: none;
+      width: 100%;
+      max-width: 560px;
+      flex-direction: column;
+      gap: 12px;
+    }
 
-      #answer-input {
-        background: #1a1a1d;
-        color: #ffffff;
-        border: 2px solid #ffffff;
-        outline: none;
-        box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
-        transition: box-shadow 0.3s;
-      }
+    .lb-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .lb-title { font-size: 1.1rem; font-weight: 800; }
+    .lb-subtitle {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-top: 3px;
+    }
 
-      #answer-input:focus {
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
-      }
+    .lb-refresh-btn {
+      background: transparent;
+      border: 1.5px solid var(--border);
+      color: var(--muted);
+      font-size: 1rem;
+      width: 34px; height: 34px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: border-color 0.2s, color 0.2s, transform 0.5s;
+    }
+    .lb-refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .lb-refresh-btn.spinning { transform: rotate(360deg); transition: transform 0.5s; }
 
-      .overlay-wrong {
-        background: rgba(139, 0, 0, 0.95) !important;
-      }
-      .overlay-correct {
-        background: rgba(0, 100, 0, 0.95) !important;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="game-container">
-      <h2>Level <span id="level-num">1</span></h2>
-      <div id="message">Press start</div>
-      <div id="grid"></div>
-      <button id="action-btn">Start</button>
+    .lb-table {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .lb-col-header {
+      display: grid;
+      grid-template-columns: 44px 1fr 80px 70px 66px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+    }
+
+    .lb-row {
+      display: grid;
+      grid-template-columns: 44px 1fr 80px 70px 66px;
+      padding: 13px 16px;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      transition: background 0.15s;
+    }
+    .lb-row:last-child { border-bottom: none; }
+    .lb-row:hover { background: rgba(255,255,255,0.03); }
+    .lb-row.is-me { background: rgba(123,97,255,0.09); }
+
+    .lb-rank {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--muted);
+    }
+    .lb-rank.gold   { color: var(--gold); }
+    .lb-rank.silver { color: var(--silver); }
+    .lb-rank.bronze { color: var(--bronze); }
+
+    .lb-name {
+      font-weight: 700;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .you-badge {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.55rem;
+      background: var(--accent);
+      color: white;
+      padding: 1px 5px;
+      border-radius: 3px;
+      margin-left: 6px;
+      vertical-align: middle;
+      letter-spacing: 0.04em;
+    }
+    .lb-score {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+    .lb-level, .lb-date {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .lb-empty, .lb-loading {
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .lb-loading { animation: blink 1.2s infinite; }
+
+    /* MESSAGE */
+    #message {
+      font-size: 1.4rem;
+      font-weight: 700;
+      height: 2.2rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .color-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 14px 3px 8px;
+      border-radius: 4px;
+      font-size: 1rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .color-tag.red   { background: rgba(255,71,87,0.15);  border: 1.5px solid var(--red);   color: var(--red); }
+    .color-tag.green { background: rgba(46,213,115,0.12); border: 1.5px solid var(--green); color: var(--green); }
+    .color-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .color-tag.red   .color-dot { background: var(--red); }
+    .color-tag.green .color-dot { background: var(--green); }
+
+    /* TIMER BAR */
+    #timer-bar-wrap {
+      width: 100%;
+      height: 4px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    #timer-bar {
+      height: 100%;
+      width: 100%;
+      background: var(--accent);
+      border-radius: 99px;
+      transition: width 0.1s linear, background 0.3s;
+    }
+    #timer-bar.danger { background: var(--danger); }
+
+    /* GRID */
+    #grid {
+      display: grid;
+      gap: 8px;
+      padding: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+
+    .square {
+      aspect-ratio: 1;
+      width: 100%;
+      min-width: 38px;
+      max-width: 72px;
+      border-radius: 8px;
+      cursor: pointer;
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      transition: transform 0.1s, box-shadow 0.15s, background 0.15s;
+    }
+    .square:hover:not(.locked) {
+      transform: scale(1.06);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-glow);
+    }
+    .square.is-red   { background: var(--red);   border-color: transparent; box-shadow: 0 0 14px var(--red-glow); }
+    .square.is-green { background: var(--green);  border-color: transparent; box-shadow: 0 0 14px var(--green-glow); }
+    .square.locked      { pointer-events: none; }
+    .square.hidden-cell { pointer-events: none; }
+
+    @keyframes wrong-flash {
+      0%,100% { background: var(--surface2); }
+      25%,75%  { background: var(--red); box-shadow: 0 0 20px var(--red-glow); }
+    }
+    .square.wrong { animation: wrong-flash 0.4s ease; }
+
+    /* ACTION BUTTON */
+    #action-btn {
+      padding: 14px 48px;
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px var(--accent-glow);
+      transition: transform 0.1s, box-shadow 0.2s;
+    }
+    #action-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px var(--accent-glow); }
+    #action-btn:active { transform: translateY(0); }
+
+    /* OVERLAY */
+    #overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(13,13,15,0.97);
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 200;
+      gap: 20px;
+    }
+
+    .overlay-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--muted);
+      min-height: 1em;
+    }
+
+    #math-prompt {
+      font-family: 'Space Mono', monospace;
+      font-size: 3.8rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-align: center;
+      min-height: 1em;
+    }
+
+    .overlay-timer-wrap { width: 220px; margin-top: -8px; }
+    #timer-bar-overlay {
+      height: 3px;
+      background: var(--accent);
+      border-radius: 99px;
+      transition: width 0.1s linear, background 0.3s;
+      width: 100%;
+    }
+
+    #answer-form {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    #answer-input {
+      background: var(--surface);
+      color: var(--text);
+      border: 2px solid var(--border);
+      font-family: 'Space Mono', monospace;
+      font-size: 2rem;
+      width: 180px;
+      text-align: center;
+      border-radius: 10px;
+      padding: 10px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    #answer-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+
+    /* NAME FORM */
+    #name-form {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      width: 300px;
+    }
+
+    .name-form-title { font-size: 1.5rem; font-weight: 800; }
+    .name-score-display {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    .name-score-display span { color: var(--accent); font-weight: 700; }
+
+    #name-input {
+      background: var(--surface);
+      color: var(--text);
+      border: 2px solid var(--border);
+      font-family: 'Syne', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      width: 100%;
+      text-align: center;
+      border-radius: 10px;
+      padding: 12px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    #name-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+    .btn-primary {
+      padding: 12px 32px;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      box-shadow: 0 4px 16px var(--accent-glow);
+      transition: transform 0.1s;
+    }
+    .btn-primary:hover { transform: translateY(-1px); }
+
+    .btn-secondary {
+      padding: 12px 24px;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      background: transparent;
+      color: var(--muted);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .btn-secondary:hover { border-color: var(--text); color: var(--text); }
+
+    .feedback-correct { color: var(--green); }
+    .feedback-wrong   { color: var(--red); }
+
+    /* TOAST */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(90px);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--text);
+      letter-spacing: 0.06em;
+      z-index: 400;
+      transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+      white-space: nowrap;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+    #toast.success { border-color: var(--green); color: var(--green); }
+    #toast.error   { border-color: var(--red);   color: var(--red); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Memory Grid</div>
+  <div class="stats">
+    <div class="stat">
+      <span class="stat-label">Level</span>
+      <span class="stat-value" id="level-num">1</span>
     </div>
-
-    <div id="overlay">
-      <div id="math-prompt" class="math-display"></div>
-      <div id="math-input-section" style="display: none">
-        <p style="font-size: 1.5rem"></p>
-        <input type="number" id="answer-input" placeholder="?" />
-        <br />
-        <button id="submit-math-btn">Check Answer</button>
-      </div>
-      <button id="ready-btn">Continue</button>
+    <div class="stat">
+      <span class="stat-label">Score</span>
+      <span class="stat-value" id="score-num">0</span>
     </div>
+  </div>
+</header>
 
-    <script>
-      const gridElement = document.getElementById("grid");
-      const messageElement = document.getElementById("message");
-      const actionBtn = document.getElementById("action-btn");
-      const levelDisplay = document.getElementById("level-num");
-      const overlay = document.getElementById("overlay");
-      const mathPrompt = document.getElementById("math-prompt");
-      const mathInputSection = document.getElementById("math-input-section");
-      const readyBtn = document.getElementById("ready-btn");
-      const submitBtn = document.getElementById("submit-math-btn");
-      const answerInput = document.getElementById("answer-input");
+<div class="tabs">
+  <button class="tab active" id="tab-game" onclick="switchTab('game')">Game</button>
+  <button class="tab" id="tab-lb" onclick="switchTab('lb')">🏆 Leaderboard</button>
+</div>
 
-      let level = 1;
-      let targetColor = "";
-      let gridData = [];
-      let isInputPhase = false;
-      let points = 0;
-      let num1, num2, product;
-      const levelSize = [4, 6, 9, 12, 16, 20, 25, 30, 36];
+<!-- GAME -->
+<div id="game-panel">
+  <div id="message">Press Start</div>
+  <div id="timer-bar-wrap" style="display:none; width:100%">
+    <div id="timer-bar"></div>
+  </div>
+  <div id="grid"></div>
+  <button id="action-btn">Start</button>
+</div>
 
-      function startLevelSequence() {
-        const max = level + 4;
-        num1 = Math.floor(Math.random() * (level < 7 ? level * 15 : 100));
-        num2 = Math.floor(Math.random() * (level < 7 ? level * 15 : 100));
-        product = num1 * num2;
+<!-- LEADERBOARD -->
+<div id="lb-panel">
+  <div class="lb-header-row">
+    <div>
+      <div class="lb-title">Global Leaderboard</div>
+      <div class="lb-subtitle">Shared · all players · top 100</div>
+    </div>
+    <button class="lb-refresh-btn" id="lb-refresh-btn" onclick="loadLeaderboard()">↻</button>
+  </div>
+  <div class="lb-table" id="lb-table">
+    <div class="lb-loading">Loading scores...</div>
+  </div>
+</div>
 
-        mathPrompt.innerText = `${num1} x ${num2}`;
-        mathInputSection.style.display = "none";
-        readyBtn.style.display = "block";
-        overlay.style.display = "flex";
-      }
+<!-- OVERLAY -->
+<div id="overlay">
+  <div class="overlay-label" id="overlay-label"></div>
+  <div id="math-prompt"></div>
+  <div class="overlay-timer-wrap">
+    <div id="timer-bar-overlay"></div>
+  </div>
 
-      readyBtn.onclick = () => {
-        overlay.style.display = "none";
-        setupLevel();
-      };
+  <!-- math answer -->
+  <div id="answer-form">
+    <input type="number" id="answer-input" placeholder="?" autocomplete="off" />
+    <div class="btn-row">
+      <button class="btn-primary" id="submit-btn">Submit</button>
+    </div>
+  </div>
 
-      function promptForMathAnswer() {
-        
-        mathPrompt.innerText = "Insert product";
-        mathPrompt.style.fontSize = "huge"; 
-        mathInputSection.style.display = "block";
-        readyBtn.style.display = "none";
-        overlay.style.display = "flex";
+  <!-- ready button (memorise phase) -->
+  <button class="btn-secondary" id="continue-btn" style="display:none">I'm Ready →</button>
 
-        answerInput.value = "";
-        answerInput.placeholder = "";
+  <!-- name entry (game over) -->
+  <div id="name-form">
+    <div class="name-form-title">Game Over</div>
+    <div class="name-score-display" id="final-score-display"></div>
+    <input type="text" id="name-input" placeholder="Your name" maxlength="20" autocomplete="off" spellcheck="false" />
+    <div class="btn-row">
+      <button class="btn-primary" id="save-score-btn">Save to Leaderboard</button>
+      <button class="btn-secondary" id="skip-save-btn">Skip</button>
+    </div>
+  </div>
+</div>
 
-        setTimeout(() => {
-          answerInput.focus();
-        }, 100);
-      }
+<div id="toast"></div>
 
-      answerInput.addEventListener("keypress", (event) => {
-        if (event.key === "Enter") {
-          submitBtn.click();
-        }
-      });
-      submitBtn.onclick = () => {
-        const userAns = parseInt(answerInput.value);
-        if (userAns === product) {
-          overlay.style.display = "none";
-          messageElement.innerHTML =
-            "<span style='color:#6ab04c'>Correct! Next Level...</span>";
-          level++;
-          points += 3;
-          levelDisplay.innerText = level;
-          setTimeout(startLevelSequence, 1000);
-        } else {
-          overlay.style.display = "none";
-          gameOver(`Wrong! Correct answer: ${product}`);
-        }
-      };
+<script>
+// ═══════════════════════════════════════════
+//   DATABASE  (window.storage — shared, persistent)
+//   Schema: key = "lb-entries"
+//   Value:  JSON array of entry objects
+//   Entry:  { id, name, score, level, ts }
+// ═══════════════════════════════════════════
+const DB_KEY  = 'lb-entries';
+const DB_SHARED = true;
+const MAX_ROWS  = 100;
 
-      function setupLevel() {
-        actionBtn.style.display = "none";
-        gridData = [];
-        const totalSquares =
-          levelSize[Math.min(level - 1, levelSize.length - 1)];
-        const cols = Math.ceil(Math.sqrt(totalSquares));
+async function dbLoad() {
+  try {
+    const r = await window.storage.get(DB_KEY, DB_SHARED);
+    return r ? JSON.parse(r.value) : [];
+  } catch { return []; }
+}
 
-        gridElement.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-        gridElement.style.width = `${cols * 90}px`;
-        gridElement.innerHTML = "";
+async function dbSave(rows) {
+  rows.sort((a, b) => b.score - a.score || b.level - a.level);
+  if (rows.length > MAX_ROWS) rows = rows.slice(0, MAX_ROWS);
+  try {
+    await window.storage.set(DB_KEY, JSON.stringify(rows), DB_SHARED);
+    return true;
+  } catch { return false; }
+}
 
-        let colors = [];
-        for (let i = 0; i < totalSquares; i++) {
-          colors.push(i % 2 === 0 ? "red" : "green");
-        }
-        for (let i = colors.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [colors[i], colors[j]] = [colors[j], colors[i]];
-        }
+async function dbInsert({ name, score, level }) {
+  const rows = await dbLoad();
+  rows.push({
+    id: `${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
+    name: (name || 'Anonymous').trim().slice(0, 20),
+    score, level,
+    ts: Date.now()
+  });
+  return dbSave(rows);
+}
 
-        for (let i = 0; i < totalSquares; i++) {
-          const color = colors[i];
-          gridData.push({ color: color, discovered: false });
-          const sq = document.createElement("div");
-          sq.classList.add("square", "is-" + color);
-          sq.onclick = () => handleSquareClick(i, sq);
-          gridElement.appendChild(sq);
-        }
+// ═══════════════════════════════════════════
+//   TABS
+// ═══════════════════════════════════════════
+function switchTab(tab) {
+  document.getElementById('tab-game').classList.toggle('active', tab === 'game');
+  document.getElementById('tab-lb').classList.toggle('active', tab === 'lb');
+  document.getElementById('game-panel').style.display = tab === 'game' ? 'flex' : 'none';
+  document.getElementById('lb-panel').style.display   = tab === 'lb'   ? 'flex' : 'none';
+  if (tab === 'lb') loadLeaderboard();
+}
 
-        messageElement.innerText = "Memorize!";
-        gridElement.classList.add("hidden-mode");
+// ═══════════════════════════════════════════
+//   LEADERBOARD RENDER
+// ═══════════════════════════════════════════
+let myName = null;
 
-        setTimeout(() => {
-          document
-            .querySelectorAll(".square")
-            .forEach((s) => s.classList.remove("is-red", "is-green"));
-          gridElement.classList.remove("hidden-mode");
-          isInputPhase = true;
-          setRandomTarget();
-        }, 2000);
-      }
+async function loadLeaderboard() {
+  const table = document.getElementById('lb-table');
+  const btn   = document.getElementById('lb-refresh-btn');
 
-      function setRandomTarget() {
-        const remaining = gridData.filter((d) => !d.discovered);
-        if (remaining.length === 0) return;
-        const availableColors = [...new Set(remaining.map((d) => d.color))];
-        targetColor =
-          availableColors[Math.floor(Math.random() * availableColors.length)];
-        messageElement.innerHTML = `Find: <span class="prompt-box text-${targetColor}">${targetColor}</span>`;
-      }
+  table.innerHTML = '<div class="lb-loading">Loading...</div>';
+  btn.classList.add('spinning');
+  setTimeout(() => btn.classList.remove('spinning'), 500);
 
-      function handleSquareClick(index, element) {
-        if (!isInputPhase || gridData[index].discovered) return;
+  const rows = await dbLoad();
 
-        if (gridData[index].color === targetColor) {
-          points += 1;
-          gridData[index].discovered = true;
-          element.classList.add("is-" + targetColor, "locked");
+  if (!rows.length) {
+    table.innerHTML = '<div class="lb-empty">No scores yet — be the first to play!</div>';
+    return;
+  }
 
-          if (gridData.every((d) => d.discovered)) {
-            isInputPhase = false;
-            setTimeout(promptForMathAnswer, 500);
-          } else {
-            setRandomTarget();
-          }
-        } else {
-          gameOver("Wrong!");
-        }
-      }
+  const rankCls  = i => ['gold','silver','bronze'][i] ?? '';
+  const rankIcon = i => ['🥇','🥈','🥉'][i] ?? `#${i+1}`;
+  const fmtDate  = ts => new Date(ts).toLocaleDateString('en-GB', { day:'2-digit', month:'short' });
+  const esc      = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-      function gameOver(reason) {
-        isInputPhase = false;
-        messageElement.innerHTML = `<span style="color:#eb4d4b">${reason}<br>Final Score: ${points}</span>`;
-        actionBtn.style.display = "inline-block";
-        actionBtn.innerText = "Start Over";
-      }
+  let html = `
+    <div class="lb-col-header">
+      <div></div>
+      <div>Player</div>
+      <div>Score</div>
+      <div>Level</div>
+      <div>Date</div>
+    </div>`;
 
-      actionBtn.onclick = () => {
-        level = 1;
-        points = 0;
-        levelDisplay.innerText = 1;
-        startLevelSequence();
-      };
-    </script>
-  </body>
+  rows.forEach((r, i) => {
+    const isMe = myName && r.name === myName;
+    html += `
+      <div class="lb-row${isMe ? ' is-me' : ''}">
+        <div class="lb-rank ${rankCls(i)}">${rankIcon(i)}</div>
+        <div class="lb-name">${esc(r.name)}${isMe ? '<span class="you-badge">YOU</span>' : ''}</div>
+        <div class="lb-score">${r.score}</div>
+        <div class="lb-level">Lvl ${r.level}</div>
+        <div class="lb-date">${fmtDate(r.ts)}</div>
+      </div>`;
+  });
+
+  table.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════
+//   TOAST
+// ═══════════════════════════════════════════
+let toastTimer;
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.className = '', 3000);
+}
+
+// ═══════════════════════════════════════════
+//   GAME
+// ═══════════════════════════════════════════
+const gridEl        = document.getElementById('grid');
+const messageEl     = document.getElementById('message');
+const actionBtn     = document.getElementById('action-btn');
+const levelDisplay  = document.getElementById('level-num');
+const scoreDisplay  = document.getElementById('score-num');
+const timerBarWrap  = document.getElementById('timer-bar-wrap');
+const timerBar      = document.getElementById('timer-bar');
+const overlay       = document.getElementById('overlay');
+const overlayLabel  = document.getElementById('overlay-label');
+const mathPrompt    = document.getElementById('math-prompt');
+const answerForm    = document.getElementById('answer-form');
+const answerInput   = document.getElementById('answer-input');
+const submitBtn     = document.getElementById('submit-btn');
+const continueBtn   = document.getElementById('continue-btn');
+const timerBarOv    = document.getElementById('timer-bar-overlay');
+const nameForm      = document.getElementById('name-form');
+const nameInput     = document.getElementById('name-input');
+const saveScoreBtn  = document.getElementById('save-score-btn');
+const skipSaveBtn   = document.getElementById('skip-save-btn');
+const finalScoreEl  = document.getElementById('final-score-display');
+
+let level = 1, points = 0;
+let targetColor = '', gridData = [];
+let isInputPhase = false;
+let num1, num2, product;
+let gridTimerIv = null, ovTimerIv = null;
+
+const LEVEL_SIZES = [4, 6, 9, 12, 16, 20, 25, 30, 36];
+function gridTime(lvl) { return Math.max(10, 30 - (lvl - 1) * 1.5); }
+
+// — overlay timer —
+function startOvTimer(sec, onDone) {
+  clearInterval(ovTimerIv);
+  let elapsed = 0;
+  timerBarOv.style.width = '100%';
+  timerBarOv.style.background = 'var(--accent)';
+  ovTimerIv = setInterval(() => {
+    elapsed += 0.1;
+    const pct = Math.max(0, 1 - elapsed / sec);
+    timerBarOv.style.width = (pct * 100) + '%';
+    if (pct < 0.3) timerBarOv.style.background = 'var(--danger)';
+    if (elapsed >= sec) { clearInterval(ovTimerIv); onDone(); }
+  }, 100);
+}
+
+// — grid timer —
+function startGridTimer(sec) {
+  clearInterval(gridTimerIv);
+  timerBarWrap.style.display = 'block';
+  timerBar.style.width = '100%';
+  timerBar.classList.remove('danger');
+  let elapsed = 0;
+  gridTimerIv = setInterval(() => {
+    elapsed += 0.1;
+    const pct = Math.max(0, 1 - elapsed / sec);
+    timerBar.style.width = (pct * 100) + '%';
+    if (pct < 0.25) timerBar.classList.add('danger');
+    if (elapsed >= sec) { clearInterval(gridTimerIv); if (isInputPhase) triggerGameOver("Time's up!"); }
+  }, 100);
+}
+
+function stopGridTimer() {
+  clearInterval(gridTimerIv);
+  timerBarWrap.style.display = 'none';
+  timerBar.classList.remove('danger');
+}
+
+// — show/hide overlay sections —
+function setOverlayMode(mode) {
+  // modes: 'memorise' | 'answer' | 'gameover'
+  answerForm.style.display    = mode === 'answer'   ? 'flex' : 'none';
+  continueBtn.style.display   = mode === 'memorise' ? 'block': 'none';
+  nameForm.style.display      = mode === 'gameover' ? 'flex' : 'none';
+  overlay.style.display       = 'flex';
+}
+
+// — level: show multiplication —
+function startLevelSequence() {
+  const cap = level < 7 ? level * 15 : 100;
+  num1 = Math.floor(Math.random() * cap) + 1;
+  num2 = Math.floor(Math.random() * cap) + 1;
+  product = num1 * num2;
+
+  overlayLabel.textContent = 'memorise the product';
+  mathPrompt.textContent   = `${num1} × ${num2}`;
+  setOverlayMode('memorise');
+  startOvTimer(8, () => { clearInterval(ovTimerIv); overlay.style.display = 'none'; setupLevel(); });
+}
+
+continueBtn.onclick = () => {
+  clearInterval(ovTimerIv);
+  overlay.style.display = 'none';
+  setupLevel();
+};
+
+// — build grid —
+function setupLevel() {
+  actionBtn.style.display = 'none';
+  gridData = [];
+  const total = LEVEL_SIZES[Math.min(level - 1, LEVEL_SIZES.length - 1)];
+  const cols  = Math.ceil(Math.sqrt(total));
+  const cell  = Math.min(72, Math.floor((Math.min(window.innerWidth - 80, 560) - 32 - (cols-1)*8) / cols));
+
+  gridEl.style.gridTemplateColumns = `repeat(${cols}, ${cell}px)`;
+  gridEl.innerHTML = '';
+
+  let colors = Array.from({length: total}, (_, i) => i%2===0 ? 'red' : 'green');
+  for (let i = colors.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [colors[i], colors[j]] = [colors[j], colors[i]];
+  }
+
+  colors.forEach((color, i) => {
+    gridData.push({ color, discovered: false });
+    const sq = document.createElement('div');
+    sq.classList.add('square', 'is-' + color);
+    sq.onclick = () => handleClick(i, sq);
+    gridEl.appendChild(sq);
+  });
+
+  messageEl.textContent = 'Memorise!';
+  gridEl.querySelectorAll('.square').forEach(s => s.classList.add('hidden-cell'));
+
+  setTimeout(() => {
+    gridEl.querySelectorAll('.square').forEach(s => s.classList.remove('is-red','is-green','hidden-cell'));
+    isInputPhase = true;
+    setTarget();
+    startGridTimer(gridTime(level));
+  }, 2000);
+}
+
+function setTarget() {
+  const remaining = gridData.filter(d => !d.discovered);
+  if (!remaining.length) return;
+  const colors = [...new Set(remaining.map(d => d.color))];
+  targetColor = colors[Math.floor(Math.random() * colors.length)];
+  messageEl.innerHTML = `Find: <span class="color-tag ${targetColor}"><span class="color-dot"></span>${targetColor}</span>`;
+}
+
+function handleClick(index, el) {
+  if (!isInputPhase || gridData[index].discovered) return;
+
+  if (gridData[index].color === targetColor) {
+    points++;
+    scoreDisplay.textContent = points;
+    gridData[index].discovered = true;
+    el.classList.add('is-' + targetColor, 'locked');
+
+    if (gridData.every(d => d.discovered)) {
+      isInputPhase = false;
+      stopGridTimer();
+      setTimeout(promptMath, 400);
+    } else {
+      setTarget();
+    }
+  } else {
+    el.classList.add('wrong');
+    setTimeout(() => el.classList.remove('wrong'), 400);
+    stopGridTimer();
+    isInputPhase = false;
+    setTimeout(() => triggerGameOver('Wrong square!'), 500);
+  }
+}
+
+// — math answer phase —
+function promptMath() {
+  overlayLabel.textContent = 'what was the product?';
+  mathPrompt.textContent   = `${num1} × ${num2} = ?`;
+  answerInput.value = '';
+  setOverlayMode('answer');
+  startOvTimer(15, () => {
+    clearInterval(ovTimerIv);
+    overlay.style.display = 'none';
+    triggerGameOver(`Time's up! Answer was ${product}`);
+  });
+  setTimeout(() => answerInput.focus(), 100);
+}
+
+answerInput.addEventListener('keypress', e => { if (e.key === 'Enter') submitBtn.click(); });
+
+submitBtn.onclick = () => {
+  clearInterval(ovTimerIv);
+  const val = parseInt(answerInput.value);
+  if (val === product) {
+    overlay.style.display = 'none';
+    points += 3;
+    scoreDisplay.textContent = points;
+    level++;
+    levelDisplay.textContent = level;
+    messageEl.innerHTML = `<span class="feedback-correct">+3 Correct! ✓</span>`;
+    setTimeout(startLevelSequence, 900);
+  } else {
+    overlay.style.display = 'none';
+    triggerGameOver(`Wrong! Answer was ${product}`);
+  }
+};
+
+// — game over + name entry —
+function triggerGameOver(reason) {
+  isInputPhase = false;
+  stopGridTimer();
+  clearInterval(ovTimerIv);
+  messageEl.innerHTML = `<span class="feedback-wrong">${reason}</span>`;
+  actionBtn.style.display = 'none';
+
+  if (points > 0) {
+    finalScoreEl.innerHTML = `Final score: <span>${points}</span> · Reached level ${level}`;
+    overlayLabel.textContent = '';
+    mathPrompt.textContent   = '';
+    nameInput.value = myName || '';
+    setOverlayMode('gameover');
+    setTimeout(() => nameInput.focus(), 120);
+  } else {
+    showPlayAgain();
+  }
+}
+
+saveScoreBtn.onclick = async () => {
+  const name = nameInput.value.trim() || 'Anonymous';
+  myName = name;
+  overlay.style.display = 'none';
+  showPlayAgain();
+  showToast('Saving…');
+  const ok = await dbInsert({ name, score: points, level });
+  showToast(ok ? `✓ Saved as "${name}"` : '✕ Save failed — try again', ok ? 'success' : 'error');
+};
+
+skipSaveBtn.onclick = () => { overlay.style.display = 'none'; showPlayAgain(); };
+nameInput.addEventListener('keypress', e => { if (e.key === 'Enter') saveScoreBtn.click(); });
+
+function showPlayAgain() {
+  actionBtn.style.display = 'inline-block';
+  actionBtn.textContent   = 'Play Again';
+}
+
+actionBtn.onclick = () => {
+  level = 1; points = 0;
+  levelDisplay.textContent = 1;
+  scoreDisplay.textContent = 0;
+  startLevelSequence();
+};
+
+// init
+loadLeaderboard();
+</script>
+</body>
 </html>
